@@ -1,0 +1,44 @@
+{
+  "name": "pq-jwttest",
+  "version": "1.0.0",
+  "description": "CRUD demo with post-quantum JWT auth (@pq-jwt/core)",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev:api": "node --watch src/server.js",
+    "dev:web": "node scripts/frontend-dev.mjs",
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev:api\" \"npm run dev:web\"",
+    "test:aud": "node scripts/test-audience.mjs",
+    "test:api": "node scripts/test-all-apis.mjs",
+    "test:core": "node scripts/test-pq-jwt-core.mjs",
+    "test:jwt-api": "node scripts/test-jwt-api.mjs",
+    "test:ts": "cd typescript-test && npm install && npm test",
+    "test": "npm run test:core && npm run test:aud && npm run test:api && npm run test:jwt-api && npm run test:ts",
+    "keys:generate": "node scripts/one-time-setup.mjs",
+    "keys:example": "node --env-file=.env scripts/sign-verify-env-example.mjs",
+    "test:user": "node scripts/test-user-apis.mjs scripts/.test-token"
+  },
+  "keywords": [
+    "jwt",
+    "post-quantum",
+    "crud"
+  ],
+  "license": "ISC",
+  "dependencies": {
+    "@pq-jwt/core": "^1.0.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "mongodb": "^6.21.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "http-proxy-middleware": "^3.0.5",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.18",
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.21",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

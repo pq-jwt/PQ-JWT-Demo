@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PQ-JWT Notes</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="bg-glow" aria-hidden="true"></div>
+    <div class="app">
+      <header class="header">
+        <div class="brand">
+          <span class="brand-mark">PQ</span>
+          <div>
+            <h1>PQ-JWT Notes</h1>
+            <p class="subtitle">Post-quantum signed tokens · ML-DSA-65</p>
+          </div>
+        </div>
+        <div id="user-bar" class="user-bar hidden">
+          <span id="current-user"></span>
+          <button type="button" id="logout-btn" class="btn btn-ghost">Log out</button>
+        </div>
+      </header>
+
+      <main>
+        <section id="auth-panel" class="panel">
+          <div class="tabs">
+            <button type="button" class="tab active" data-tab="login">Log in</button>
+            <button type="button" class="tab" data-tab="register">Register</button>
+          </div>
+          <form id="login-form" class="auth-form">
+            <label>
+              Username
+              <input name="username" autocomplete="username" required />
+            </label>
+            <label>
+              Password
+              <input name="password" type="password" autocomplete="current-password" required />
+            </label>
+            <button type="submit" class="btn btn-primary">Log in</button>
+          </form>
+          <form id="register-form" class="auth-form hidden">
+            <label>
+              Username
+              <input name="username" autocomplete="username" required />
+            </label>
+            <label>
+              Password
+              <input name="password" type="password" autocomplete="new-password" minlength="6" required />
+            </label>
+            <button type="submit" class="btn btn-primary">Create account</button>
+          </form>
+          <p id="auth-error" class="error hidden"></p>
+        </section>
+
+        <section id="app-panel" class="panel hidden">
+          <div class="token-info">
+            <span class="badge">PQ-JWT</span>
+            <span id="token-preview" class="token-preview"></span>
+          </div>
+
+          <form id="item-form" class="item-form">
+            <input type="hidden" id="edit-id" />
+            <label>
+              Title
+              <input id="item-title" required placeholder="Note title" />
+            </label>
+            <label>
+              Body
+              <textarea id="item-body" rows="3" placeholder="Details…"></textarea>
+            </label>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="save-btn">Add note</button>
+              <button type="button" class="btn btn-ghost hidden" id="cancel-edit">Cancel</button>
+            </div>
+          </form>
+
+          <p id="app-error" class="error hidden"></p>
+          <ul id="items-list" class="items-list"></ul>
+        </section>
+      </main>
+    </div>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

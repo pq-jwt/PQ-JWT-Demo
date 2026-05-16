@@ -1,0 +1,21 @@
+{
+  "name": "pq-jwt-typescript-test",
+  "private": true,
+  "version": "1.0.0",
+  "description": "TypeScript compile + runtime checks for @pq-jwt/core",
+  "type": "module",
+  "scripts": {
+    "postinstall": "node scripts/ensure-types-export.mjs",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "start": "node dist/demo.js",
+    "test": "npm run typecheck && npm run build && npm run start"
+  },
+  "dependencies": {
+    "@pq-jwt/core": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3"
+  }
+}

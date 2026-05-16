@@ -1,0 +1,8 @@
+node_modules/
+.keys.json
+scripts/.test-token
+scripts/.token-*
+typescript-test/node_modules
+typescript-test/dist
+.env
+data/
