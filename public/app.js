@@ -1,5 +1,6 @@
 const TOKEN_KEY = "pq_jwt_token";
 const USER_KEY = "pq_jwt_user";
+const AUTH_MODE_KEY = "pq_auth_mode";
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -8,6 +9,8 @@ const appPanel = $("#app-panel");
 const userBar = $("#user-bar");
 const currentUser = $("#current-user");
 const tokenPreview = $("#token-preview");
+const authModeBadge = $("#auth-mode-badge");
+const authModeSelect = $("#auth-mode");
 const authError = $("#auth-error");
 const appError = $("#app-error");
 const itemsList = $("#items-list");
@@ -20,12 +23,28 @@ const itemBody = $("#item-body");
 const saveBtn = $("#save-btn");
 const cancelEdit = $("#cancel-edit");
 
+function getAuthMode() {
+  return localStorage.getItem(AUTH_MODE_KEY) || authModeSelect?.value || "both";
+}
+
+function setAuthMode(mode) {
+  localStorage.setItem(AUTH_MODE_KEY, mode);
+  if (authModeSelect) authModeSelect.value = mode;
+}
+
 function getToken() {
+  const mode = getAuthMode();
+  if (mode === "cookie") return null;
   return localStorage.getItem(TOKEN_KEY);
 }
 
-function setSession(token, user) {
-  localStorage.setItem(TOKEN_KEY, token);
+function setSession(token, user, authMode) {
+  setAuthMode(authMode);
+  if (authMode === "cookie") {
+    localStorage.removeItem(TOKEN_KEY);
+  } else {
+    localStorage.setItem(TOKEN_KEY, token ?? "");
+  }
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
@@ -46,10 +65,17 @@ function showError(el, message) {
 
 async function api(path, options = {}) {
   const headers = { "Content-Type": "application/json", ...options.headers };
+  const mode = getAuthMode();
   const token = getToken();
-  if (token) headers.Authorization = `Bearer ${token}`;
+  if (token && (mode === "bearer" || mode === "both")) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
-  const res = await fetch(path, { ...options, headers });
+  const res = await fetch(path, {
+    ...options,
+    headers,
+    credentials: "include",
+  });
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
 
@@ -60,19 +86,32 @@ async function api(path, options = {}) {
   return data;
 }
 
+function updateTokenPreview(authMode, token) {
+  authModeBadge.textContent = `auth: ${authMode}`;
+  if (authMode === "cookie") {
+    tokenPreview.textContent = "(httpOnly cookie — not readable from JS)";
+  } else if (token) {
+    tokenPreview.textContent = token;
+  } else {
+    tokenPreview.textContent = "(no token in response)";
+  }
+}
+
 function showAuth() {
   authPanel.classList.remove("hidden");
   appPanel.classList.add("hidden");
   userBar.classList.add("hidden");
   showError(appError, "");
+  const saved = localStorage.getItem(AUTH_MODE_KEY);
+  if (saved && authModeSelect) authModeSelect.value = saved;
 }
 
-function showApp(user) {
+function showApp(user, authMode, token) {
   authPanel.classList.add("hidden");
   appPanel.classList.remove("hidden");
   userBar.classList.remove("hidden");
   currentUser.textContent = user.username;
-  tokenPreview.textContent = getToken() ?? "";
+  updateTokenPreview(authMode, token);
   showError(authError, "");
 }
 
@@ -91,17 +130,19 @@ loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   showError(authError, "");
   const fd = new FormData(loginForm);
+  const authMode = fd.get("authMode") || "both";
   try {
-    const { token, user } = await api("/api/auth/login", {
+    const data = await api("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({
         username: fd.get("username"),
         password: fd.get("password"),
         clientOrigin: window.location.origin,
+        authMode,
       }),
     });
-    setSession(token, user);
-    showApp(user);
+    setSession(data.token, data.user, data.authMode || authMode);
+    showApp(data.user, data.authMode || authMode, data.token);
     await loadItems();
   } catch (err) {
     showError(authError, err.message);
@@ -131,7 +172,12 @@ registerForm.addEventListener("submit", async (e) => {
   }
 });
 
-$("#logout-btn").addEventListener("click", () => {
+$("#logout-btn").addEventListener("click", async () => {
+  try {
+    await api("/api/auth/logout", { method: "POST" });
+  } catch {
+    /* clear local state even if API fails */
+  }
   clearSession();
   resetItemForm();
   itemsList.innerHTML = "";
@@ -231,18 +277,21 @@ async function loadItems() {
 }
 
 async function init() {
-  const token = getToken();
+  const authMode = getAuthMode();
+  if (authModeSelect) authModeSelect.value = authMode;
+
   const userJson = localStorage.getItem(USER_KEY);
-  if (!token || !userJson) {
+  const token = localStorage.getItem(TOKEN_KEY);
+
+  if (!userJson && authMode !== "cookie") {
     showAuth();
     return;
   }
 
   try {
-    const user = JSON.parse(userJson);
     const { user: me } = await api("/api/auth/me");
-    setSession(token, me);
-    showApp(me);
+    setSession(token, me, authMode);
+    showApp(me, authMode, token);
     await loadItems();
   } catch {
     clearSession();

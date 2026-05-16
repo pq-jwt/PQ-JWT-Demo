@@ -430,6 +430,41 @@ curl -s -X POST http://localhost:3006/api/jwt/refresh \
 
 ---
 
+## Auth: Bearer header, httpOnly cookie, or both
+
+Login accepts `authMode` in the JSON body:
+
+| `authMode` | Behavior |
+|------------|----------|
+| `bearer` | Token only in response JSON → use `Authorization: Bearer` |
+| `cookie` | **httpOnly** cookie `pq_jwt` only (token omitted from JSON) |
+| `both` (default) | Cookie + token in JSON (best for testing both paths) |
+
+Protected routes accept **either** `Authorization: Bearer <token>` **or** the `pq_jwt` cookie.
+
+```bash
+# Cookie-only login
+curl -s -X POST http://localhost:3006/api/auth/login \
+  -H "Content-Type: application/json" \
+  -H "Origin: http://localhost:5173" \
+  -d '{"username":"myuser","password":"secret123","clientOrigin":"http://localhost:5173","authMode":"cookie"}' \
+  -c cookies.txt
+
+curl -s http://localhost:3006/api/auth/me -b cookies.txt
+
+curl -s -X POST http://localhost:3006/api/auth/logout -b cookies.txt
+```
+
+**Frontend:** open http://localhost:5173, pick **Auth mode** on login, use **Log out** to clear the cookie. All `fetch` calls use `credentials: "include"`.
+
+```bash
+npm run test:cookies   # automated cookie + bearer tests (API must be running)
+```
+
+Cookie env vars (see `.env.example`): `PQ_JWT_COOKIE_NAME`, `COOKIE_SECURE`, `COOKIE_SAME_SITE`.
+
+---
+
 ## Auth: issuer, audience, Bearer tokens
 
 ### Issuer (`iss`)
@@ -476,6 +511,7 @@ Run from **repository root** unless noted.
 | Core library | `npm run test:core` | |
 | HTTP APIs | `npm run test:api` | Auto-login test user |
 | JWT routes | `npm run test:jwt-api` | decode / refresh |
+| Cookie auth | `npm run test:cookies` | Bearer vs httpOnly cookie |
 | Your token | `npm run test:user` | Uses `scripts/.test-token` |
 | Custom token | `TOKEN='...' node scripts/test-user-apis.mjs` | |
 | TypeScript | `npm run test:ts` | `cd typescript-test && npm test` |

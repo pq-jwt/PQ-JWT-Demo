@@ -38,6 +38,14 @@
               Password
               <input name="password" type="password" autocomplete="current-password" required />
             </label>
+            <label>
+              Auth mode
+              <select name="authMode" id="auth-mode">
+                <option value="both" selected>Both (Bearer + httpOnly cookie)</option>
+                <option value="cookie">Cookie only</option>
+                <option value="bearer">Bearer header only</option>
+              </select>
+            </label>
             <button type="submit" class="btn btn-primary">Log in</button>
           </form>
           <form id="register-form" class="auth-form hidden">
@@ -57,6 +65,7 @@
         <section id="app-panel" class="panel hidden">
           <div class="token-info">
             <span class="badge">PQ-JWT</span>
+            <span id="auth-mode-badge" class="badge badge-muted"></span>
             <span id="token-preview" class="token-preview"></span>
           </div>
 

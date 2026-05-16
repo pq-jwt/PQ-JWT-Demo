@@ -12,6 +12,7 @@ import {
   getJwtConfig,
   ALLOWED_AUDIENCES,
 } from "./auth.js";
+import { setAuthCookie, clearAuthCookie, normalizeAuthMode, COOKIE_NAME } from "./cookies.js";
 import { connectDb, closeDb, listItems, getItem, createItem, updateItem, deleteItem } from "./db.js";
 import { SUPPORTED_ALGORITHMS, algorithmInfo, decode, refresh } from "./pqjwt.js";
 
@@ -29,6 +30,7 @@ app.use(
         callback(null, false);
       }
     },
+    credentials: true,
   }),
 );
 app.use(express.json());
@@ -41,6 +43,7 @@ app.get("/api/health", (_req, res) => {
     tokenType: "PQ-JWT",
     db: "mongodb",
     jwt: getJwtConfig(),
+    cookie: { name: COOKIE_NAME, httpOnly: true },
   });
 });
 
@@ -74,18 +77,17 @@ app.post("/api/jwt/decode", (req, res) => {
 app.post("/api/jwt/refresh", requireAuth, (req, res) => {
   try {
     const audience = req.user.audience;
-    const token = refresh(
-      req.headers.authorization.slice(7),
-      keys.publicKey,
-      keys.secretKey,
-      {
-        expiresIn: "24h",
-        issuer: process.env.JWT_ISSUER || "pq-jwttest",
-        subject: req.user.userId,
-        audience,
-      },
-    );
-    res.json({ token, audience });
+    const token = refresh(req.pqJwt, keys.publicKey, keys.secretKey, {
+      expiresIn: "24h",
+      issuer: process.env.JWT_ISSUER || "pq-jwttest",
+      subject: req.user.userId,
+      audience,
+    });
+    const authMode = normalizeAuthMode(req.body?.authMode);
+    if (authMode === "cookie" || authMode === "both") setAuthCookie(res, token);
+    const body = { audience, authMode };
+    if (authMode === "bearer" || authMode === "both") body.token = token;
+    res.json(body);
   } catch (err) {
     res.status(401).json({ error: err.message });
   }
@@ -104,13 +106,29 @@ app.post("/api/auth/register", async (req, res) => {
 
 app.post("/api/auth/login", async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, authMode: rawMode } = req.body;
     const audience = resolveAudienceFromRequest(req);
+    const authMode = normalizeAuthMode(rawMode);
     const result = await loginUser(username, password, keys.secretKey, audience);
-    res.json(result);
+
+    if (authMode === "cookie" || authMode === "both") setAuthCookie(res, result.token);
+
+    const body = {
+      user: result.user,
+      audience: result.audience,
+      authMode,
+    };
+    if (authMode === "bearer" || authMode === "both") body.token = result.token;
+
+    res.json(body);
   } catch (err) {
     res.status(401).json({ error: err.message });
   }
+});
+
+app.post("/api/auth/logout", (_req, res) => {
+  clearAuthCookie(res);
+  res.json({ ok: true });
 });
 
 app.get("/api/auth/me", authMiddleware(keys.publicKey), async (req, res) => {

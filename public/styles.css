@@ -235,6 +235,22 @@ textarea:focus {
   letter-spacing: 0.04em;
 }
 
+.badge-muted {
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.auth-form select {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
 .token-preview {
   overflow: hidden;
   text-overflow: ellipsis;

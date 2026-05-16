@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { sign, verify, TokenExpiredError, InvalidTokenError, SignatureError } from "./pqjwt.js";
 import { findUserByUsername, createUser, findUserById } from "./db.js";
+import { getTokenFromCookies } from "./cookies.js";
 
 export const ISSUER = process.env.JWT_ISSUER || "pq-jwttest";
 
@@ -64,6 +65,13 @@ export async function loginUser(username, password, secretKey, audience) {
   };
 }
 
+/** Bearer header first, then httpOnly cookie (for browser + API testing). */
+export function extractTokenFromRequest(req) {
+  const header = req.headers.authorization;
+  if (header?.startsWith("Bearer ")) return header.slice(7);
+  return getTokenFromCookies(req);
+}
+
 export function verifyToken(token, publicKey) {
   try {
     const { payload } = verify(token, publicKey, { issuer: ISSUER });
@@ -84,12 +92,15 @@ export function verifyToken(token, publicKey) {
 
 export function authMiddleware(publicKey) {
   return (req, res, next) => {
-    const header = req.headers.authorization;
-    if (!header?.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "Missing or invalid Authorization header" });
+    const token = extractTokenFromRequest(req);
+    if (!token) {
+      return res.status(401).json({
+        error: "Missing auth: send Authorization: Bearer <token> or pq_jwt cookie",
+      });
     }
     try {
-      req.user = verifyToken(header.slice(7), publicKey);
+      req.user = verifyToken(token, publicKey);
+      req.pqJwt = token;
       next();
     } catch (err) {
       res.status(401).json({ error: err.message });

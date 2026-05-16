@@ -12,8 +12,9 @@
     "test:api": "node scripts/test-all-apis.mjs",
     "test:core": "node scripts/test-pq-jwt-core.mjs",
     "test:jwt-api": "node scripts/test-jwt-api.mjs",
+    "test:cookies": "node scripts/test-cookies.mjs",
     "test:ts": "cd typescript-test && npm install && npm test",
-    "test": "npm run test:core && npm run test:aud && npm run test:api && npm run test:jwt-api && npm run test:ts",
+    "test": "npm run test:core && npm run test:aud && npm run test:cookies && npm run test:api && npm run test:jwt-api && npm run test:ts",
     "keys:generate": "node scripts/one-time-setup.mjs",
     "keys:example": "node --env-file=.env scripts/sign-verify-env-example.mjs",
     "test:user": "node scripts/test-user-apis.mjs scripts/.test-token"

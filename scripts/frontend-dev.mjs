@@ -14,6 +14,7 @@ app.use(
   createProxyMiddleware({
     target: API_URL,
     changeOrigin: true,
+    cookieDomainRewrite: "",
     pathRewrite: (path) => `/api${path}`,
   }),
 );
