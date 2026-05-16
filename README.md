@@ -2,11 +2,11 @@
 [![npm downloads](https://img.shields.io/npm/dm/@pq-jwt/core)](https://www.npmjs.com/package/@pq-jwt/core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Repository:** [github.com/ruhil6789/PQ-JWT-Demo](https://github.com/ruhil6789/PQ-JWT-Demo) · **Package:** [@pq-jwt/core on npm](https://www.npmjs.com/package/@pq-jwt/core)
+**Demo repo:** [github.com/ruhil6789/PQ-JWT-Demo](https://github.com/ruhil6789/PQ-JWT-Demo) · **Library:** [github.com/pq-jwt/PQ-JWT](https://github.com/pq-jwt/PQ-JWT) · **npm:** [@pq-jwt/core](https://www.npmjs.com/package/@pq-jwt/core) **v1.0.4+**
 
 # PQ-JWT Demo — Developer Guide
 
-Reference app and test suite for [**@pq-jwt/core**](https://www.npmjs.com/package/@pq-jwt/core): post-quantum JSON Web Tokens signed with NIST algorithms (default **ML-DSA-65**). Includes an Express API, MongoDB-backed auth, a small web UI, and a **TypeScript** validation package.
+Reference app and test suite for [**@pq-jwt/core**](https://www.npmjs.com/package/@pq-jwt/core) (**JavaScript + TypeScript**, Node.js ESM): post-quantum JSON Web Tokens signed with NIST algorithms (default **ML-DSA-65**). Includes an Express API, MongoDB-backed auth, a small web UI, and a **TypeScript** validation package.
 
 Use this repo as a **hands-on assistant** when integrating PQ-JWT in JavaScript or TypeScript backends.
 
@@ -46,7 +46,7 @@ PQ-JWT tokens are larger than classic HS256 JWTs (~4–5 KB for ML-DSA-65). Head
 
 ## Prerequisites
 
-- **Node.js** 20+ (22+ recommended; `node --env-file=.env` supported)
+- **Node.js** **≥ 20.19** (`@pq-jwt/core` engine requirement; 22+ recommended; `node --env-file=.env` supported)
 - **MongoDB** running locally (default `mongodb://127.0.0.1:27017/pq_jwttest`)
 - **npm**
 
@@ -158,7 +158,10 @@ Install in your own project:
 
 ```bash
 npm install @pq-jwt/core
+# or pin latest: npm install @pq-jwt/core@1.0.4
 ```
+
+**Library source:** [github.com/pq-jwt/PQ-JWT](https://github.com/pq-jwt/PQ-JWT) · **Homepage:** [PQ-JWT README](https://github.com/pq-jwt/PQ-JWT#readme)
 
 ### Minimal sign / verify
 
@@ -321,7 +324,7 @@ See full walkthrough: [`typescript-test/src/demo.ts`](typescript-test/src/demo.t
 
 ### TypeScript note (package exports)
 
-If `tsc` cannot resolve types for `@pq-jwt/core`, ensure the published package `exports` includes `"types"`. This repo’s `typescript-test/postinstall` runs `scripts/ensure-types-export.mjs` as a workaround when testing locally.
+**v1.0.4+** ships `"types"` in `package.json` `exports` — `import` from `@pq-jwt/core` works with `module: "NodeNext"` out of the box. Older versions may need the `typescript-test/scripts/ensure-types-export.mjs` postinstall patch (kept as a safety check).
 
 ---
 

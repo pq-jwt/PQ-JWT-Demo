@@ -18,8 +18,12 @@ const pkgPath = join(
 const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
 const exp = pkg.exports?.["."];
 
-if (exp && !exp.types) {
+if (exp?.types) {
+  console.log("@pq-jwt/core exports.types OK — no patch needed");
+} else if (exp) {
   exp.types = "./src/index.d.ts";
   writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
   console.log("Patched @pq-jwt/core exports.types for TypeScript");
+} else {
+  console.warn("Unexpected @pq-jwt/core package.json exports");
 }

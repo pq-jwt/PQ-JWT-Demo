@@ -1,7 +1,7 @@
 {
   "name": "pq-jwttest",
   "version": "1.0.0",
-  "description": "CRUD demo with post-quantum JWT auth (@pq-jwt/core)",
+  "description": "PQ-JWT demo app — JS + TypeScript integration with @pq-jwt/core 1.0.4",
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
@@ -33,19 +33,19 @@
     "url": "https://github.com/ruhil6789/PQ-JWT-Demo/issues"
   },
   "dependencies": {
-    "@pq-jwt/core": "^1.0.0",
+    "@pq-jwt/core": "^1.0.4",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "mongodb": "^6.21.0"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2",
-    "http-proxy-middleware": "^3.0.5",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
     "@types/node": "^22.15.21",
+    "concurrently": "^9.1.2",
+    "http-proxy-middleware": "^3.0.5",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
