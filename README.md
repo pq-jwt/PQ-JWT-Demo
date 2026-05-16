@@ -2,7 +2,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/@pq-jwt/core)](https://www.npmjs.com/package/@pq-jwt/core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Demo repo:** [github.com/ruhil6789/PQ-JWT-Demo](https://github.com/ruhil6789/PQ-JWT-Demo) · **Library:** [github.com/pq-jwt/PQ-JWT](https://github.com/pq-jwt/PQ-JWT) · **npm:** [@pq-jwt/core](https://www.npmjs.com/package/@pq-jwt/core) **v1.0.6+**
+**Demo repo:** [github.com/ruhil6789/PQ-JWT-Demo](https://github.com/ruhil6789/PQ-JWT-Demo) · **Library:** [github.com/pq-jwt/PQ-JWT](https://github.com/pq-jwt/PQ-JWT) · **npm:** [@pq-jwt/core](https://www.npmjs.com/package/@pq-jwt/core) **v1.0.4+**
 
 # PQ-JWT Demo — Developer Guide
 
@@ -158,7 +158,7 @@ Install in your own project:
 
 ```bash
 npm install @pq-jwt/core
-# or pin latest: npm install @pq-jwt/core@1.0.6
+# or pin latest: npm install @pq-jwt/core@1.0.4
 ```
 
 **Library source:** [github.com/pq-jwt/PQ-JWT](https://github.com/pq-jwt/PQ-JWT) · **Homepage:** [PQ-JWT README](https://github.com/pq-jwt/PQ-JWT#readme)
@@ -324,7 +324,7 @@ See full walkthrough: [`typescript-test/src/demo.ts`](typescript-test/src/demo.t
 
 ### TypeScript note (package exports)
 
-**v1.0.6+** ships `"types"` in `package.json` `exports` — `import` from `@pq-jwt/core` works with `module: "NodeNext"` out of the box. Older versions may need the `typescript-test/scripts/ensure-types-export.mjs` postinstall patch (kept as a safety check).
+**v1.0.4+** ships `"types"` in `package.json` `exports` — `import` from `@pq-jwt/core` works with `module: "NodeNext"` out of the box. Older versions may need the `typescript-test/scripts/ensure-types-export.mjs` postinstall patch (kept as a safety check).
 
 ---
 
@@ -430,17 +430,25 @@ curl -s -X POST http://localhost:3006/api/jwt/refresh \
 
 ---
 
-## Auth: Bearer header, httpOnly cookie, or both
+## Auth: Bearer header, httpOnly session cookie, or both
+
+PQ-JWT tokens are **~4.7 KB**; browsers drop cookies over **4 KB**. This app stores:
+
+| Storage | Contents |
+|---------|----------|
+| `Authorization: Bearer` | Full PQ-JWT (no size limit) |
+| httpOnly cookie `pq_session` | **UUID only** (~36 bytes) → server `sessions` Map |
+| PQ-JWT payload `jti` | Same UUID, links token to session |
 
 Login accepts `authMode` in the JSON body:
 
 | `authMode` | Behavior |
 |------------|----------|
-| `bearer` | Token only in response JSON → use `Authorization: Bearer` |
-| `cookie` | **httpOnly** cookie `pq_jwt` only (token omitted from JSON) |
-| `both` (default) | Cookie + token in JSON (best for testing both paths) |
+| `bearer` | Token in JSON → `Authorization: Bearer` |
+| `cookie` | `pq_session` cookie only (token omitted from JSON) |
+| `both` (default) | Bearer token + `pq_session` cookie |
 
-Protected routes accept **either** `Authorization: Bearer <token>` **or** the `pq_jwt` cookie.
+Protected routes accept **Bearer** or valid **`pq_session`** (looked up in `src/sessions.js`).
 
 ```bash
 # Cookie-only login
@@ -461,7 +469,7 @@ curl -s -X POST http://localhost:3006/api/auth/logout -b cookies.txt
 npm run test:cookies   # automated cookie + bearer tests (API must be running)
 ```
 
-Cookie env vars (see `.env.example`): `PQ_JWT_COOKIE_NAME`, `COOKIE_SECURE`, `COOKIE_SAME_SITE`.
+Cookie env vars (see `.env.example`): `PQ_SESSION_COOKIE_NAME`, `COOKIE_SECURE`, `COOKIE_SAME_SITE`.
 
 ---
 

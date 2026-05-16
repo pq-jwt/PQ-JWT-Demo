@@ -1,7 +1,9 @@
+import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { sign, verify, TokenExpiredError, InvalidTokenError, SignatureError } from "./pqjwt.js";
 import { findUserByUsername, createUser, findUserById } from "./db.js";
-import { getTokenFromCookies } from "./cookies.js";
+import { getSessionIdFromCookies } from "./cookies.js";
+import { getSession } from "./sessions.js";
 
 export const ISSUER = process.env.JWT_ISSUER || "pq-jwttest";
 
@@ -12,11 +14,12 @@ export const ALLOWED_AUDIENCES = (
   .map((s) => s.trim())
   .filter(Boolean);
 
+const SESSION_TTL_SEC = Number(process.env.PQ_JWT_COOKIE_MAX_AGE_SEC || 86400);
+
 export function getJwtConfig() {
   return { issuer: ISSUER, allowedAudiences: ALLOWED_AUDIENCES };
 }
 
-/** Resolve aud from browser Origin or clientOrigin; curl can send either. */
 export function resolveAudienceFromRequest(req) {
   const candidate = req.headers.origin || req.body?.clientOrigin;
   if (candidate && ALLOWED_AUDIENCES.includes(candidate)) {
@@ -45,31 +48,35 @@ export async function registerUser(username, password) {
   return createUser(username.trim(), hash);
 }
 
+/** Issue PQ-JWT with jti; jti is stored in pq_session cookie (not the full token). */
+export function issueTokenForUser(user, secretKey, audience) {
+  const userId = user.id ?? user._id?.toString();
+  const username = user.username;
+  const jti = randomUUID();
+  const token = sign(
+    { userId, username },
+    secretKey,
+    { expiresIn: `${SESSION_TTL_SEC}s`, issuer: ISSUER, subject: userId, audience, jwtId: jti },
+  );
+  return {
+    token,
+    jti,
+    user: { id: userId, username },
+    audience,
+  };
+}
+
 export async function loginUser(username, password, secretKey, audience) {
   const user = await findUserByUsername(username?.trim());
   if (!user) throw new Error("Invalid username or password");
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) throw new Error("Invalid username or password");
 
-  const userId = user._id.toString();
-  const token = sign(
-    { userId, username: user.username },
+  return issueTokenForUser(
+    { id: user._id.toString(), username: user.username },
     secretKey,
-    { expiresIn: "24h", issuer: ISSUER, subject: userId, audience },
-  );
-
-  return {
-    token,
-    user: { id: userId, username: user.username },
     audience,
-  };
-}
-
-/** Bearer header first, then httpOnly cookie (for browser + API testing). */
-export function extractTokenFromRequest(req) {
-  const header = req.headers.authorization;
-  if (header?.startsWith("Bearer ")) return header.slice(7);
-  return getTokenFromCookies(req);
+  );
 }
 
 export function verifyToken(token, publicKey) {
@@ -81,7 +88,12 @@ export function verifyToken(token, publicKey) {
       throw new InvalidTokenError("audience mismatch");
     }
 
-    return { userId: payload.userId, username: payload.username, audience: aud };
+    return {
+      userId: payload.userId,
+      username: payload.username,
+      audience: aud,
+      jti: payload.jti,
+    };
   } catch (err) {
     if (err instanceof TokenExpiredError) throw new Error("Token expired");
     if (err instanceof SignatureError) throw new Error("Invalid token signature");
@@ -92,19 +104,35 @@ export function verifyToken(token, publicKey) {
 
 export function authMiddleware(publicKey) {
   return (req, res, next) => {
-    const token = extractTokenFromRequest(req);
-    if (!token) {
-      return res.status(401).json({
-        error: "Missing auth: send Authorization: Bearer <token> or pq_jwt cookie",
-      });
+    const header = req.headers.authorization;
+    if (header?.startsWith("Bearer ")) {
+      try {
+        req.user = verifyToken(header.slice(7), publicKey);
+        req.pqJwt = header.slice(7);
+        return next();
+      } catch (err) {
+        return res.status(401).json({ error: err.message });
+      }
     }
-    try {
-      req.user = verifyToken(token, publicKey);
-      req.pqJwt = token;
-      next();
-    } catch (err) {
-      res.status(401).json({ error: err.message });
+
+    const sessionId = getSessionIdFromCookies(req);
+    if (sessionId) {
+      const session = getSession(sessionId);
+      if (session) {
+        req.user = {
+          userId: session.userId,
+          username: session.username,
+          audience: session.audience,
+        };
+        req.sessionId = sessionId;
+        return next();
+      }
+      return res.status(401).json({ error: "Invalid or expired session" });
     }
+
+    return res.status(401).json({
+      error: "Missing auth: Authorization: Bearer <token> or pq_session cookie",
+    });
   };
 }
 

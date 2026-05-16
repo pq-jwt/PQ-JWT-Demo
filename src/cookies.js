@@ -1,8 +1,11 @@
-/** PQ-JWT httpOnly cookie helpers (demo + client/server testing). */
+/** httpOnly session cookie (small UUID only — not the full PQ-JWT). */
 
-export const COOKIE_NAME = process.env.PQ_JWT_COOKIE_NAME || "pq_jwt";
+export const SESSION_COOKIE_NAME = process.env.PQ_SESSION_COOKIE_NAME || "pq_session";
 
-const MAX_AGE_SEC = Number(process.env.PQ_JWT_COOKIE_MAX_AGE_SEC || 86400); // 24h
+/** @deprecated use SESSION_COOKIE_NAME — old name stored full token and exceeded 4KB */
+export const COOKIE_NAME = SESSION_COOKIE_NAME;
+
+const MAX_AGE_SEC = Number(process.env.PQ_JWT_COOKIE_MAX_AGE_SEC || 86400);
 
 function cookieSecure() {
   if (process.env.COOKIE_SECURE === "true") return true;
@@ -10,7 +13,6 @@ function cookieSecure() {
   return process.env.NODE_ENV === "production";
 }
 
-/** Parse Cookie header into a plain object. */
 export function parseCookies(cookieHeader) {
   if (!cookieHeader) return {};
   const out = {};
@@ -24,14 +26,14 @@ export function parseCookies(cookieHeader) {
   return out;
 }
 
-export function getTokenFromCookies(req) {
-  return parseCookies(req.headers.cookie)[COOKIE_NAME] || null;
+export function getSessionIdFromCookies(req) {
+  return parseCookies(req.headers.cookie)[SESSION_COOKIE_NAME] || null;
 }
 
-/** Set httpOnly PQ-JWT cookie after login / refresh. */
-export function setAuthCookie(res, token) {
+/** Set httpOnly session id cookie (UUID ~36 bytes). */
+export function setSessionCookie(res, sessionId) {
   const parts = [
-    `${COOKIE_NAME}=${encodeURIComponent(token)}`,
+    `${SESSION_COOKIE_NAME}=${encodeURIComponent(sessionId)}`,
     "Path=/",
     `Max-Age=${MAX_AGE_SEC}`,
     "HttpOnly",
@@ -41,9 +43,9 @@ export function setAuthCookie(res, token) {
   res.append("Set-Cookie", parts.join("; "));
 }
 
-export function clearAuthCookie(res) {
+export function clearSessionCookie(res) {
   const parts = [
-    `${COOKIE_NAME}=`,
+    `${SESSION_COOKIE_NAME}=`,
     "Path=/",
     "Max-Age=0",
     "HttpOnly",

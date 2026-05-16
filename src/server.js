@@ -6,13 +6,21 @@ import { loadOrCreateKeys } from "./keys.js";
 import {
   registerUser,
   loginUser,
+  issueTokenForUser,
   authMiddleware,
   getPublicUser,
   resolveAudienceFromRequest,
   getJwtConfig,
   ALLOWED_AUDIENCES,
 } from "./auth.js";
-import { setAuthCookie, clearAuthCookie, normalizeAuthMode, COOKIE_NAME } from "./cookies.js";
+import {
+  setSessionCookie,
+  clearSessionCookie,
+  normalizeAuthMode,
+  SESSION_COOKIE_NAME,
+  getSessionIdFromCookies,
+} from "./cookies.js";
+import { createSession, deleteSession } from "./sessions.js";
 import { connectDb, closeDb, listItems, getItem, createItem, updateItem, deleteItem } from "./db.js";
 import { SUPPORTED_ALGORITHMS, algorithmInfo, decode, refresh } from "./pqjwt.js";
 
@@ -43,7 +51,12 @@ app.get("/api/health", (_req, res) => {
     tokenType: "PQ-JWT",
     db: "mongodb",
     jwt: getJwtConfig(),
-    cookie: { name: COOKIE_NAME, httpOnly: true },
+    cookie: {
+      name: SESSION_COOKIE_NAME,
+      type: "session-id",
+      httpOnly: true,
+      note: "Stores UUID only (~36 bytes). Full PQ-JWT uses Bearer header.",
+    },
   });
 });
 
@@ -77,14 +90,39 @@ app.post("/api/jwt/decode", (req, res) => {
 app.post("/api/jwt/refresh", requireAuth, (req, res) => {
   try {
     const audience = req.user.audience;
-    const token = refresh(req.pqJwt, keys.publicKey, keys.secretKey, {
-      expiresIn: "24h",
-      issuer: process.env.JWT_ISSUER || "pq-jwttest",
-      subject: req.user.userId,
-      audience,
-    });
     const authMode = normalizeAuthMode(req.body?.authMode);
-    if (authMode === "cookie" || authMode === "both") setAuthCookie(res, token);
+    let token;
+    let jti;
+
+    if (req.pqJwt) {
+      token = refresh(req.pqJwt, keys.publicKey, keys.secretKey, {
+        expiresIn: "24h",
+        issuer: process.env.JWT_ISSUER || "pq-jwttest",
+        subject: req.user.userId,
+        audience,
+      });
+      const decoded = decode(token);
+      jti = decoded.payload.jti;
+    } else {
+      if (req.sessionId) deleteSession(req.sessionId);
+      const issued = issueTokenForUser(
+        { id: req.user.userId, username: req.user.username },
+        keys.secretKey,
+        audience,
+      );
+      token = issued.token;
+      jti = issued.jti;
+    }
+
+    if (authMode === "cookie" || authMode === "both") {
+      createSession(jti, {
+        userId: req.user.userId,
+        username: req.user.username,
+        audience,
+      });
+      setSessionCookie(res, jti);
+    }
+
     const body = { audience, authMode };
     if (authMode === "bearer" || authMode === "both") body.token = token;
     res.json(body);
@@ -111,7 +149,14 @@ app.post("/api/auth/login", async (req, res) => {
     const authMode = normalizeAuthMode(rawMode);
     const result = await loginUser(username, password, keys.secretKey, audience);
 
-    if (authMode === "cookie" || authMode === "both") setAuthCookie(res, result.token);
+    if (authMode === "cookie" || authMode === "both") {
+      createSession(result.jti, {
+        userId: result.user.id,
+        username: result.user.username,
+        audience: result.audience,
+      });
+      setSessionCookie(res, result.jti);
+    }
 
     const body = {
       user: result.user,
@@ -126,8 +171,10 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-app.post("/api/auth/logout", (_req, res) => {
-  clearAuthCookie(res);
+app.post("/api/auth/logout", (req, res) => {
+  const sessionId = getSessionIdFromCookies(req);
+  if (sessionId) deleteSession(sessionId);
+  clearSessionCookie(res);
   res.json({ ok: true });
 });
 

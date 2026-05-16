@@ -89,7 +89,7 @@ async function api(path, options = {}) {
 function updateTokenPreview(authMode, token) {
   authModeBadge.textContent = `auth: ${authMode}`;
   if (authMode === "cookie") {
-    tokenPreview.textContent = "(httpOnly cookie — not readable from JS)";
+    tokenPreview.textContent = "(pq_session cookie — UUID only, httpOnly)";
   } else if (token) {
     tokenPreview.textContent = token;
   } else {
