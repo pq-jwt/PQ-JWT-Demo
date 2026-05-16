@@ -2,7 +2,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/@pq-jwt/core)](https://www.npmjs.com/package/@pq-jwt/core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Demo repo:** [github.com/ruhil6789/PQ-JWT-Demo](https://github.com/ruhil6789/PQ-JWT-Demo) · **Library:** [github.com/pq-jwt/PQ-JWT](https://github.com/pq-jwt/PQ-JWT) · **npm:** [@pq-jwt/core](https://www.npmjs.com/package/@pq-jwt/core) **v1.0.4+**
+**Demo repo:** [github.com/ruhil6789/PQ-JWT-Demo](https://github.com/ruhil6789/PQ-JWT-Demo) · **Library:** [github.com/pq-jwt/PQ-JWT](https://github.com/pq-jwt/PQ-JWT) · **npm:** [@pq-jwt/core](https://www.npmjs.com/package/@pq-jwt/core) **v1.0.6+**
 
 # PQ-JWT Demo — Developer Guide
 
@@ -158,7 +158,7 @@ Install in your own project:
 
 ```bash
 npm install @pq-jwt/core
-# or pin latest: npm install @pq-jwt/core@1.0.4
+# or pin latest: npm install @pq-jwt/core@1.0.6
 ```
 
 **Library source:** [github.com/pq-jwt/PQ-JWT](https://github.com/pq-jwt/PQ-JWT) · **Homepage:** [PQ-JWT README](https://github.com/pq-jwt/PQ-JWT#readme)
@@ -324,7 +324,7 @@ See full walkthrough: [`typescript-test/src/demo.ts`](typescript-test/src/demo.t
 
 ### TypeScript note (package exports)
 
-**v1.0.4+** ships `"types"` in `package.json` `exports` — `import` from `@pq-jwt/core` works with `module: "NodeNext"` out of the box. Older versions may need the `typescript-test/scripts/ensure-types-export.mjs` postinstall patch (kept as a safety check).
+**v1.0.6+** ships `"types"` in `package.json` `exports` — `import` from `@pq-jwt/core` works with `module: "NodeNext"` out of the box. Older versions may need the `typescript-test/scripts/ensure-types-export.mjs` postinstall patch (kept as a safety check).
 
 ---
 

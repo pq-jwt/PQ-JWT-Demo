@@ -1,7 +1,7 @@
 {
   "name": "pq-jwttest",
   "version": "1.0.0",
-  "description": "PQ-JWT demo app — JS + TypeScript integration with @pq-jwt/core 1.0.4",
+  "description": "PQ-JWT demo app — JS + TypeScript integration with @pq-jwt/core 1.0.6",
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
@@ -34,7 +34,7 @@
     "url": "https://github.com/ruhil6789/PQ-JWT-Demo/issues"
   },
   "dependencies": {
-    "@pq-jwt/core": "^1.0.4",
+    "@pq-jwt/core": "^1.0.6",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",
