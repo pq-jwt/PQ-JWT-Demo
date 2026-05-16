@@ -2,6 +2,8 @@
 [![npm downloads](https://img.shields.io/npm/dm/@pq-jwt/core)](https://www.npmjs.com/package/@pq-jwt/core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+**Repository:** [github.com/ruhil6789/PQ-JWT-Demo](https://github.com/ruhil6789/PQ-JWT-Demo) · **Package:** [@pq-jwt/core on npm](https://www.npmjs.com/package/@pq-jwt/core)
+
 # PQ-JWT Demo — Developer Guide
 
 Reference app and test suite for [**@pq-jwt/core**](https://www.npmjs.com/package/@pq-jwt/core): post-quantum JSON Web Tokens signed with NIST algorithms (default **ML-DSA-65**). Includes an Express API, MongoDB-backed auth, a small web UI, and a **TypeScript** validation package.

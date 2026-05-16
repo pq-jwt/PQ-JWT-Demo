@@ -24,6 +24,14 @@
     "crud"
   ],
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ruhil6789/PQ-JWT-Demo.git"
+  },
+  "homepage": "https://www.npmjs.com/package/@pq-jwt/core",
+  "bugs": {
+    "url": "https://github.com/ruhil6789/PQ-JWT-Demo/issues"
+  },
   "dependencies": {
     "@pq-jwt/core": "^1.0.0",
     "bcryptjs": "^3.0.2",
