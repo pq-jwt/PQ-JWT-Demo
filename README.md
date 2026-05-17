@@ -1,8 +1,9 @@
 [![npm version](https://img.shields.io/npm/v/@pq-jwt/core)](https://www.npmjs.com/package/@pq-jwt/core)
 [![npm downloads](https://img.shields.io/npm/dm/@pq-jwt/core)](https://www.npmjs.com/package/@pq-jwt/core)
+[![Website](https://img.shields.io/badge/website-pq--jwt.github.io-00d4aa)](https://pq-jwt.github.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Demo repo:** [github.com/ruhil6789/PQ-JWT-Demo](https://github.com/ruhil6789/PQ-JWT-Demo) · **Library:** [github.com/pq-jwt/PQ-JWT](https://github.com/pq-jwt/PQ-JWT) · **npm:** [@pq-jwt/core](https://www.npmjs.com/package/@pq-jwt/core) **v1.0.4+**
+**Website:** [pq-jwt.github.io](https://pq-jwt.github.io) · **Demo:** [github.com/pq-jwt/PQ-JWT-Demo](https://github.com/pq-jwt/PQ-JWT-Demo) · **Library:** [github.com/pq-jwt/PQ-JWT](https://github.com/pq-jwt/PQ-JWT) · **npm:** [@pq-jwt/core](https://www.npmjs.com/package/@pq-jwt/core)
 
 # PQ-JWT Demo — Developer Guide
 
