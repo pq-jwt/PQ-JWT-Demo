@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>@pq-jose/jose Demo</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="app">
+    <header class="header">
+      <div class="brand">
+        <span class="brand-mark">JO</span>
+        <div>
+          <h1>@pq-jose/jose</h1>
+          <p class="subtitle">Post-Quantum JOSE — SignJWT, jwtVerify, EncryptJWT, jwtDecrypt</p>
+        </div>
+      </div>
+      <div id="user-bar" class="user-bar hidden">
+        <span id="current-user" class="badge"></span>
+        <button type="button" id="logout-btn" class="btn btn-ghost">Log out</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="auth-panel" class="panel">
+        <div class="panel-header">
+          <h2>Sign In</h2>
+          <p>Backend signs with <code>new SignJWT(payload).sign(secretKey)</code> (ML-DSA-65).</p>
+        </div>
+        <form id="login-form" class="auth-form">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" placeholder="e.g. OmNamayShivay" required>
+          </div>
+          <div class="form-group">
+            <label for="role">User Role</label>
+            <select id="role" name="role">
+              <option value="member">Member (Regular Access)</option>
+              <option value="admin">Admin (Full Access)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Sign JWT &amp; Login</button>
+        </form>
+      </section>
+
+      <section id="dashboard-panel" class="panel hidden">
+        <div class="panel-header">
+          <h2>JOSE API Guards</h2>
+          <p>Routes protected by <code>jwtVerify()</code> and ML-KEM <code>EncryptJWT</code> / <code>jwtDecrypt</code>.</p>
+        </div>
+
+        <div class="keys-grid">
+          <div class="key-panel">
+            <div class="key-panel-head">
+              <span class="badge badge-sign">ML-DSA-65</span>
+              <span class="key-panel-title">Signing verify key</span>
+            </div>
+            <p class="key-hint"><code>jwtVerify(token, publicKey)</code></p>
+            <pre id="sign-key-display" class="key-pre">Loading…</pre>
+            <p id="sign-key-meta" class="key-meta"></p>
+          </div>
+          <div class="key-panel key-panel-enc">
+            <div class="key-panel-head">
+              <span class="badge badge-enc">ML-KEM-768</span>
+              <span class="key-panel-title">Encrypt public key</span>
+            </div>
+            <p class="key-hint"><code>EncryptJWT.encrypt(recipientPublicKey)</code></p>
+            <pre id="kem-key-display" class="key-pre">Loading…</pre>
+            <p id="kem-key-meta" class="key-meta"></p>
+          </div>
+        </div>
+
+        <div class="token-container">
+          <div class="badge-row">
+            <span class="badge badge-success">PQ-JOSE Secured</span>
+            <span id="token-role-badge" class="badge"></span>
+          </div>
+          <div class="token-preview">
+            <span class="label">Authorization Header (JWS):</span>
+            <pre id="token-display"></pre>
+          </div>
+        </div>
+
+        <div class="action-grid">
+          <div class="action-card">
+            <div class="card-body">
+              <h3>JWS — Profile</h3>
+              <p class="desc">Protected by <code>jwtVerify(token, publicKey)</code>. Any valid signed token works.</p>
+            </div>
+            <div class="card-actions">
+              <button type="button" id="btn-fetch-profile" class="btn btn-secondary btn-block">Fetch Profile</button>
+            </div>
+            <div id="profile-status" class="status-box card-result"></div>
+          </div>
+
+          <div class="action-card">
+            <div class="card-body">
+              <h3>JWS — Admin</h3>
+              <p class="desc"><code>jwtVerify()</code> plus server-side <code>role === 'admin'</code>.</p>
+            </div>
+            <div class="card-actions">
+              <button type="button" id="btn-fetch-dashboard" class="btn btn-accent btn-block">Fetch Admin Dashboard</button>
+            </div>
+            <div id="dashboard-status" class="status-box card-result"></div>
+          </div>
+
+          <div class="action-card action-card-jwe">
+            <div class="card-body">
+              <h3>JWE — Encrypt / Decrypt</h3>
+              <p class="desc"><code>EncryptJWT</code> (ML-KEM-768 + A256GCM) then <code>jwtDecrypt()</code>.</p>
+              <div class="form-group form-group-compact">
+                <label for="jwe-plaintext">Secret plaintext</label>
+                <textarea id="jwe-plaintext" rows="2" placeholder="classified message">Creator of PQ-JOSE</textarea>
+              </div>
+            </div>
+            <div class="card-actions btn-row">
+              <button type="button" id="btn-jwe-encrypt" class="btn btn-jwe btn-block">Encrypt (JWE)</button>
+              <button type="button" id="btn-jwe-decrypt" class="btn btn-secondary btn-block">Decrypt JWE</button>
+            </div>
+            <div id="jwe-status" class="status-box card-result"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2026 PQ-JWT ecosystem · @pq-jose/jose on npm</p>
+    </footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

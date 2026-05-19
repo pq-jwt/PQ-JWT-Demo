@@ -101,9 +101,18 @@ pq-jwttest/
 │   ├── src/demo.ts
 │   ├── src/assert-types.ts
 │   └── tsconfig.json
+├── pq-jwt-express-demo/  # @pq-jwt/express middleware UI (:3008)
+├── pq-jose-demo/         # @pq-jose/jose SignJWT/jwtVerify/JWE UI (:3009)
 ├── .env.example
 └── README.md          # this file
 ```
+
+### Ecosystem sub-demos
+
+| Command | URL | Package |
+|---------|-----|---------|
+| `npm run express:start` | http://localhost:3008 | [@pq-jwt/express](https://www.npmjs.com/package/@pq-jwt/express) |
+| `npm run jose:start` | http://localhost:3009 | [@pq-jose/jose](https://www.npmjs.com/package/@pq-jose/jose) |
 
 ---
 

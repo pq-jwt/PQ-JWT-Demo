@@ -21,7 +21,9 @@
     "keys:hybrid-example": "node scripts/sign-verify-env-hybrid-example.mjs",
     "test:user": "node scripts/test-user-apis.mjs scripts/.test-token",
     "express:start": "cd pq-jwt-express-demo && npm start",
-    "express:test": "cd pq-jwt-express-demo && npm test"
+    "express:test": "cd pq-jwt-express-demo && npm test",
+    "jose:start": "cd pq-jose-demo && npm install && npm start",
+    "jose:test": "cd pq-jose-demo && npm install && npm test"
   },
   "keywords": [
     "jwt",
@@ -38,12 +40,13 @@
     "url": "https://github.com/ruhil6789/PQ-JWT-Demo/issues"
   },
   "dependencies": {
+    "@pq-jose/jose": "^0.0.1",
     "@pq-jwt/core": "^1.0.4",
     "@pq-jwt/express": "^0.0.1",
     "@pq-jwt/hybrid": "^0.0.2",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
-    "express": "^5.1.0",
+    "express": "^5.2.1",
     "mongodb": "^6.21.0"
   },
   "devDependencies": {

@@ -18,9 +18,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ENV_PATH = join(__dirname, "..", ".env");
 
 // 1. Load keys from parent .env
-let publicKeyHex = "";
-let privateKeyHex = "";
-let issuer = "https://auth.yourdomain.com";
+let publicKeyHex = process.env.PQ_PUBLIC_KEY || "";
+let privateKeyHex =  process.env.PQ_PRIVATE_KEY || "";
+let issuer = process.env.JWT_ISSUER || "https://auth.yourdomain.com";
 
 if (existsSync(ENV_PATH)) {
   const content = readFileSync(ENV_PATH, "utf8");

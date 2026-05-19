@@ -1,0 +1,14 @@
+{
+  "name": "pq-jose-demo",
+  "version": "1.0.0",
+  "description": "Post-Quantum JOSE (@pq-jose/jose) interactive demo",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.mjs"
+  },
+  "dependencies": {
+    "@pq-jose/jose": "^0.0.1",
+    "express": "^5.1.0"
+  }
+}
