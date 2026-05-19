@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>@pq-jwt/express Middleware Demo</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="app">
+    <header class="header">
+      <div class="brand">
+        <span class="brand-mark">EX</span>
+        <div>
+          <h1>@pq-jwt/express</h1>
+          <p class="subtitle">Post-Quantum Auth middleware for Express.js</p>
+        </div>
+      </div>
+      <div id="user-bar" class="user-bar hidden">
+        <span id="current-user" class="badge"></span>
+        <button type="button" id="logout-btn" class="btn btn-ghost">Log out</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Auth section -->
+      <section id="auth-panel" class="panel">
+        <div class="panel-header">
+          <h2>Sign In / Authenticate</h2>
+          <p>Sign a standard PQ-JWT token using the backend, then verify it via <code>pqAuth()</code> middleware.</p>
+        </div>
+        <form id="login-form" class="auth-form">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" placeholder="e.g. sachin_ruhil" required>
+          </div>
+          <div class="form-group">
+            <label for="role">User Role</label>
+            <select id="role" name="role">
+              <option value="member">Member (Regular Access)</option>
+              <option value="admin">Admin (Full Access)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Generate PQ-JWT & Login</button>
+        </form>
+      </section>
+
+      <!-- Dashboard/Middleware Interaction Section (hidden by default) -->
+      <section id="dashboard-panel" class="panel hidden">
+        <div class="panel-header">
+          <h2>Express Middleware Guards</h2>
+          <p>Interact with routes guarded by different middleware configurations.</p>
+        </div>
+
+        <div class="token-container">
+          <div class="badge-row">
+            <span class="badge badge-success">PQ-JWT Secured</span>
+            <span id="token-role-badge" class="badge"></span>
+          </div>
+          <div class="token-preview">
+            <span class="label">Authorization Header:</span>
+            <pre id="token-display"></pre>
+          </div>
+        </div>
+
+        <div class="action-grid">
+          <!-- Member Route Card -->
+          <div class="action-card">
+            <h3>Standard Route Guard</h3>
+            <p class="desc">Guarded by <code>pqAuth()</code> middleware. Anyone with a valid PQ-JWT token can enter.</p>
+            <button type="button" id="btn-fetch-profile" class="btn btn-secondary">Fetch Profile</button>
+            <div id="profile-status" class="status-box"></div>
+          </div>
+
+          <!-- Admin Route Card -->
+          <div class="action-card">
+            <h3>Admin Role Guard</h3>
+            <p class="desc">Guarded by <code>pqAuth()</code> AND <code>requireRole('admin')</code> middlewares.</p>
+            <button type="button" id="btn-fetch-dashboard" class="btn btn-accent">Fetch Admin Dashboard</button>
+            <div id="dashboard-status" class="status-box"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2026 @pq-jwt ecosystem. Designed with premium high-fidelity glassmorphism.</p>
+    </footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

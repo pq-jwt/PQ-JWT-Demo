@@ -19,7 +19,9 @@
     "keys:generate": "node scripts/one-time-setup.mjs",
     "keys:example": "node scripts/sign-verify-env-example.mjs",
     "keys:hybrid-example": "node scripts/sign-verify-env-hybrid-example.mjs",
-    "test:user": "node scripts/test-user-apis.mjs scripts/.test-token"
+    "test:user": "node scripts/test-user-apis.mjs scripts/.test-token",
+    "express:start": "cd pq-jwt-express-demo && npm start",
+    "express:test": "cd pq-jwt-express-demo && npm test"
   },
   "keywords": [
     "jwt",
@@ -37,6 +39,7 @@
   },
   "dependencies": {
     "@pq-jwt/core": "^1.0.4",
+    "@pq-jwt/express": "^0.0.1",
     "@pq-jwt/hybrid": "^0.0.2",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",

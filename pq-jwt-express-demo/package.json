@@ -1,0 +1,15 @@
+{
+  "name": "pq-jwt-express-demo",
+  "version": "1.0.0",
+  "description": "Post-Quantum JWT Express Middleware Demo",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.mjs"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "@pq-jwt/core": "^1.0.4",
+    "@pq-jwt/express": "^0.0.1"
+  }
+}
