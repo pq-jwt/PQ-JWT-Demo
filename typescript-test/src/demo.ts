@@ -2,6 +2,11 @@
  * Runtime + typed demo for every @pq-jwt/core export.
  * Run: npm test (in typescript-test/)
  */
+import { webcrypto } from "node:crypto";
+if (typeof globalThis.crypto === "undefined" || !globalThis.crypto.getRandomValues) {
+  globalThis.crypto = webcrypto as any;
+}
+
 import {
   SUPPORTED_ALGORITHMS,
   algorithmInfo,

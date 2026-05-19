@@ -1,15 +1,34 @@
 /**
- * Minimal example: load keys from .env, sign a token, verify it.
+ * Unified Example: Load and execute both standard PQ (Core) and Hybrid (Composite)
+ * signing and verification using configurations from your .env file.
  *
- *   node --env-file=.env scripts/sign-verify-env-example.mjs
+ *   node scripts/sign-verify-env-example.mjs
  *
- * Generate keys first:
+ * Generate keys first if you haven't already:
  *   node scripts/one-time-setup.mjs
  */
+import { webcrypto } from "node:crypto";
+if (typeof globalThis.crypto === "undefined" || !globalThis.crypto.getRandomValues) {
+  globalThis.crypto = webcrypto;
+}
+
 import { readFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { importKey, sign, verify } from "@pq-jwt/core";
+
+// 1. Import Core PQ-JWT functions
+import { 
+  importKey as importCoreKey, 
+  sign as signCore, 
+  verify as verifyCore 
+} from "@pq-jwt/core";
+
+// 2. Import Hybrid PQ-JWT functions
+import { 
+  importCompositeKey, 
+  signComposite, 
+  verifyComposite 
+} from "@pq-jwt/hybrid";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ENV_PATH = join(__dirname, "..", ".env");
@@ -33,29 +52,84 @@ function loadEnvFile(path) {
   }
 }
 
+// Load env variables
 loadEnvFile(ENV_PATH);
 
-const { PQ_PRIVATE_KEY, PQ_PUBLIC_KEY, JWT_ISSUER } = process.env;
+const {
+  PQ_PRIVATE_KEY,
+  PQ_PUBLIC_KEY,
+  PQ_ALGORITHM,
+  PQ_HYBRID_PRIVATE_KEY,
+  PQ_HYBRID_PUBLIC_KEY,
+  PQ_HYBRID_ALGORITHM,
+  JWT_ISSUER,
+} = process.env;
 
+const issuer = JWT_ISSUER || "https://auth.yourdomain.com";
+const testPayload = { userId: "demo-user-123", role: "admin", email: "user@example.com" };
+
+console.log("\n============================================================");
+console.log("   PQ-JWT UNIFIED INTEGRATION: CORE & HYBRID SPECIFICATION  ");
+console.log("============================================================\n");
+
+// ==========================================
+// PHASE 1: STANDARD POST-QUANTUM (CORE)
+// ==========================================
+console.log("─── PHASE 1: Standard Post-Quantum (@pq-jwt/core) ───");
 if (!PQ_PRIVATE_KEY || !PQ_PUBLIC_KEY) {
-  console.error("Missing PQ_PRIVATE_KEY or PQ_PUBLIC_KEY in .env");
-  console.error("Run: node scripts/one-time-setup.mjs");
-  process.exit(1);
+  console.log("⚠️  Skipping: PQ_PRIVATE_KEY or PQ_PUBLIC_KEY not found in .env\n");
+} else {
+  const coreAlg = PQ_ALGORITHM || "ML-DSA-65";
+  const coreSk = importCoreKey(PQ_PRIVATE_KEY);
+  const corePk = importCoreKey(PQ_PUBLIC_KEY);
+
+  console.log(`🔑 Core Algorithm:  ${coreAlg}`);
+  console.log(`🔑 Key Size (SK):  ${coreSk.length} bytes`);
+  console.log(`🔑 Key Size (PK):  ${corePk.length} bytes`);
+
+  const coreToken = signCore(testPayload, coreSk, {
+    algorithm: coreAlg,
+    expiresIn: "1h",
+    issuer,
+  });
+
+  console.log(`📝 Generated Token: ${coreToken.slice(0, 75)}...`);
+  console.log(`📝 Token Length:    ${coreToken.length} characters`);
+
+  const verifiedCore = verifyCore(coreToken, corePk, { issuer });
+  console.log("✅ Verification:    SUCCESS");
+  console.log("📝 Verified Header:", verifiedCore.header);
+  console.log("📝 Verified Claims:", verifiedCore.payload);
+  console.log("\n------------------------------------------------------------\n");
 }
 
-const secretKey = importKey(PQ_PRIVATE_KEY);
-const publicKey = importKey(PQ_PUBLIC_KEY);
-const issuer = JWT_ISSUER || "pq-jwttest-example";
+// ==========================================
+// PHASE 2: COMPOSITE PQ-CLASSICAL (HYBRID)
+// ==========================================
+console.log("─── PHASE 2: Composite PQ-Classical (@pq-jwt/hybrid) ───");
+if (!PQ_HYBRID_PRIVATE_KEY || !PQ_HYBRID_PUBLIC_KEY) {
+  console.log("⚠️  Skipping: PQ_HYBRID_PRIVATE_KEY or PQ_HYBRID_PUBLIC_KEY not found in .env\n");
+} else {
+  const hybridAlg = PQ_HYBRID_ALGORITHM || "ML-DSA-65-ES256";
+  const hybridSk = importCompositeKey(PQ_HYBRID_PRIVATE_KEY);
+  const hybridPk = importCompositeKey(PQ_HYBRID_PUBLIC_KEY);
 
-const token = sign({ userId: "demo-user", role: "admin" }, secretKey, {
-  expiresIn: "1h",
-  issuer,
-});
+  console.log(`🔑 Hybrid Algorithm: ${hybridAlg}`);
+  console.log(`🔑 Key Size (SK):   ${hybridSk.length} bytes`);
+  console.log(`🔑 Key Size (PK):   ${hybridPk.length} bytes`);
 
-console.log("Signed token (first 80 chars):", token.slice(0, 80) + "…");
-console.log("Token length:", token.length);
+  const hybridToken = signComposite(testPayload, hybridSk, {
+    algorithm: hybridAlg,
+    expiresIn: "1h",
+    issuer,
+  });
 
-const { header, payload } = verify(token, publicKey, { issuer });
+  console.log(`📝 Generated Token:  ${hybridToken.slice(0, 75)}...`);
+  console.log(`📝 Token Length:     ${hybridToken.length} characters`);
 
-console.log("\nVerified header:", header);
-console.log("Verified payload:", payload);
+  const verifiedHybrid = verifyComposite(hybridToken, hybridPk, { issuer });
+  console.log("✅ Verification:     SUCCESS");
+  console.log("📝 Verified Header: ", verifiedHybrid.header);
+  console.log("📝 Verified Claims: ", verifiedHybrid.payload);
+  console.log("\n============================================================\n");
+}

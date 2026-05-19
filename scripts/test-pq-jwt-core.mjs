@@ -3,6 +3,11 @@
  * Exercises every export from @pq-jwt/core.
  * Run: npm run test:core
  */
+import { webcrypto } from "node:crypto";
+if (typeof globalThis.crypto === "undefined" || !globalThis.crypto.getRandomValues) {
+  globalThis.crypto = webcrypto;
+}
+
 import {
   SUPPORTED_ALGORITHMS,
   algorithmInfo,

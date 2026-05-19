@@ -1,6 +1,7 @@
 const TOKEN_KEY = "pq_jwt_token";
 const USER_KEY = "pq_jwt_user";
 const AUTH_MODE_KEY = "pq_auth_mode";
+const ALGORITHM_KEY = "pq_algorithm";
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -10,7 +11,10 @@ const userBar = $("#user-bar");
 const currentUser = $("#current-user");
 const tokenPreview = $("#token-preview");
 const authModeBadge = $("#auth-mode-badge");
+const tokenTypeBadge = $("#token-type-badge");
+const tokenAlgBadge = $("#token-alg-badge");
 const authModeSelect = $("#auth-mode");
+const tokenAlgSelect = $("#token-alg");
 const authError = $("#auth-error");
 const appError = $("#app-error");
 const itemsList = $("#items-list");
@@ -86,8 +90,44 @@ async function api(path, options = {}) {
   return data;
 }
 
+function parseJwtHeader(token) {
+  try {
+    const parts = token.split('.');
+    if (parts.length === 3) {
+      const headerStr = atob(parts[0].replace(/-/g, '+').replace(/_/g, '/'));
+      return JSON.parse(headerStr);
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
 function updateTokenPreview(authMode, token) {
   authModeBadge.textContent = `auth: ${authMode}`;
+  
+  let alg = localStorage.getItem(ALGORITHM_KEY) || "ML-DSA-65";
+  let isHybrid = alg.includes("-ES") || alg.includes("-Ed");
+  
+  if (token) {
+    const header = parseJwtHeader(token);
+    if (header && header.alg) {
+      alg = header.alg;
+      isHybrid = alg.includes("-ES") || alg.includes("-Ed");
+    }
+  }
+  
+  tokenAlgBadge.textContent = alg;
+  tokenTypeBadge.textContent = isHybrid ? "Hybrid-JWT" : "PQ-JWT";
+  
+  if (isHybrid) {
+    tokenTypeBadge.style.background = "rgba(147, 51, 234, 0.15)";
+    tokenTypeBadge.style.color = "#c084fc";
+  } else {
+    tokenTypeBadge.style.background = "";
+    tokenTypeBadge.style.color = "";
+  }
+
   if (authMode === "cookie") {
     tokenPreview.textContent = "(pq_session cookie — UUID only, httpOnly)";
   } else if (token) {
@@ -102,8 +142,12 @@ function showAuth() {
   appPanel.classList.add("hidden");
   userBar.classList.add("hidden");
   showError(appError, "");
-  const saved = localStorage.getItem(AUTH_MODE_KEY);
-  if (saved && authModeSelect) authModeSelect.value = saved;
+  
+  const savedMode = localStorage.getItem(AUTH_MODE_KEY);
+  if (savedMode && authModeSelect) authModeSelect.value = savedMode;
+
+  const savedAlg = localStorage.getItem(ALGORITHM_KEY);
+  if (savedAlg && tokenAlgSelect) tokenAlgSelect.value = savedAlg;
 }
 
 function showApp(user, authMode, token) {
@@ -131,6 +175,7 @@ loginForm.addEventListener("submit", async (e) => {
   showError(authError, "");
   const fd = new FormData(loginForm);
   const authMode = fd.get("authMode") || "both";
+  const algorithm = fd.get("algorithm") || "ML-DSA-65";
   try {
     const data = await api("/api/auth/login", {
       method: "POST",
@@ -139,8 +184,10 @@ loginForm.addEventListener("submit", async (e) => {
         password: fd.get("password"),
         clientOrigin: window.location.origin,
         authMode,
+        algorithm,
       }),
     });
+    localStorage.setItem(ALGORITHM_KEY, algorithm);
     setSession(data.token, data.user, data.authMode || authMode);
     showApp(data.user, data.authMode || authMode, data.token);
     await loadItems();
@@ -279,6 +326,9 @@ async function loadItems() {
 async function init() {
   const authMode = getAuthMode();
   if (authModeSelect) authModeSelect.value = authMode;
+
+  const savedAlg = localStorage.getItem(ALGORITHM_KEY);
+  if (savedAlg && tokenAlgSelect) tokenAlgSelect.value = savedAlg;
 
   const userJson = localStorage.getItem(USER_KEY);
   const token = localStorage.getItem(TOKEN_KEY);

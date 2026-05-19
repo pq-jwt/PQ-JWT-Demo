@@ -241,6 +241,12 @@ textarea:focus {
   font-weight: 600;
 }
 
+.badge-accent {
+  background: rgba(147, 51, 234, 0.15) !important;
+  color: #c084fc !important;
+  font-weight: 700;
+}
+
 .auth-form select {
   width: 100%;
   padding: 0.55rem 0.65rem;

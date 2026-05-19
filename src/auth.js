@@ -1,3 +1,4 @@
+import "./env.js";
 import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { sign, verify, TokenExpiredError, InvalidTokenError, SignatureError } from "./pqjwt.js";
@@ -48,15 +49,24 @@ export async function registerUser(username, password) {
   return createUser(username.trim(), hash);
 }
 
-/** Issue PQ-JWT with jti; jti is stored in pq_session cookie (not the full token). */
-export function issueTokenForUser(user, secretKey, audience) {
+/** Issue PQ-JWT or Hybrid JWT with jti; jti is stored in pq_session cookie. */
+export function issueTokenForUser(user, keys, audience, options = {}) {
   const userId = user.id ?? user._id?.toString();
   const username = user.username;
   const jti = randomUUID();
+  const alg = options.algorithm || (keys && keys.algorithm) || "ML-DSA-65";
+  
   const token = sign(
     { userId, username },
-    secretKey,
-    { expiresIn: `${SESSION_TTL_SEC}s`, issuer: ISSUER, subject: userId, audience, jwtId: jti },
+    keys,
+    { 
+      expiresIn: `${SESSION_TTL_SEC}s`, 
+      issuer: ISSUER, 
+      subject: userId, 
+      audience, 
+      jwtId: jti,
+      algorithm: alg
+    },
   );
   return {
     token,
@@ -66,7 +76,7 @@ export function issueTokenForUser(user, secretKey, audience) {
   };
 }
 
-export async function loginUser(username, password, secretKey, audience) {
+export async function loginUser(username, password, keys, audience, algorithm) {
   const user = await findUserByUsername(username?.trim());
   if (!user) throw new Error("Invalid username or password");
   const ok = await bcrypt.compare(password, user.passwordHash);
@@ -74,14 +84,15 @@ export async function loginUser(username, password, secretKey, audience) {
 
   return issueTokenForUser(
     { id: user._id.toString(), username: user.username },
-    secretKey,
+    keys,
     audience,
+    { algorithm },
   );
 }
 
-export function verifyToken(token, publicKey) {
+export function verifyToken(token, keys) {
   try {
-    const { payload } = verify(token, publicKey, { issuer: ISSUER });
+    const { payload } = verify(token, keys, { issuer: ISSUER });
 
     const aud = payload.aud;
     if (!aud || !ALLOWED_AUDIENCES.includes(aud)) {
@@ -102,12 +113,12 @@ export function verifyToken(token, publicKey) {
   }
 }
 
-export function authMiddleware(publicKey) {
+export function authMiddleware(keys) {
   return (req, res, next) => {
     const header = req.headers.authorization;
     if (header?.startsWith("Bearer ")) {
       try {
-        req.user = verifyToken(header.slice(7), publicKey);
+        req.user = verifyToken(header.slice(7), keys);
         req.pqJwt = header.slice(7);
         return next();
       } catch (err) {

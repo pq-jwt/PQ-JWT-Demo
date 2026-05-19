@@ -46,6 +46,17 @@
                 <option value="bearer">Bearer header only</option>
               </select>
             </label>
+            <label>
+              Token Signature Algorithm
+              <select name="algorithm" id="token-alg">
+                <option value="ML-DSA-65" selected>Standard PQ (ML-DSA-65)</option>
+                <option value="ML-DSA-65-ES256">Hybrid PQ-Classical (ML-DSA-65-ES256 · IETF Draft)</option>
+                <option value="ML-DSA-44">Standard PQ Light (ML-DSA-44)</option>
+                <option value="ML-DSA-44-ES256">Hybrid PQ-Classical Light (ML-DSA-44-ES256 · IETF Draft)</option>
+                <option value="ML-DSA-87">Standard PQ High (ML-DSA-87)</option>
+                <option value="ML-DSA-87-ES384">Hybrid PQ-Classical High (ML-DSA-87-ES384 · IETF Draft)</option>
+              </select>
+            </label>
             <button type="submit" class="btn btn-primary">Log in</button>
           </form>
           <form id="register-form" class="auth-form hidden">
@@ -64,8 +75,9 @@
 
         <section id="app-panel" class="panel hidden">
           <div class="token-info">
-            <span class="badge">PQ-JWT</span>
+            <span id="token-type-badge" class="badge">PQ-JWT</span>
             <span id="auth-mode-badge" class="badge badge-muted"></span>
+            <span id="token-alg-badge" class="badge badge-accent">ML-DSA-65</span>
             <span id="token-preview" class="token-preview"></span>
           </div>
 

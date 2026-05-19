@@ -48,25 +48,27 @@ app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
     algorithm: keys.algorithm,
-    tokenType: "PQ-JWT",
+    hybridAlgorithm: keys.hybridAlgorithm,
+    tokenType: "PQ-JWT & Hybrid JWT (IETF)",
     db: "mongodb",
     jwt: getJwtConfig(),
     cookie: {
       name: SESSION_COOKIE_NAME,
       type: "session-id",
       httpOnly: true,
-      note: "Stores UUID only (~36 bytes). Full PQ-JWT uses Bearer header.",
+      note: "Stores UUID only (~36 bytes). Full PQ/Hybrid JWT uses Bearer header.",
     },
   });
 });
 
-const requireAuth = authMiddleware(keys.publicKey);
+const requireAuth = authMiddleware(keys);
 
 /** PQ-JWT library helpers: algorithmInfo, decode, refresh */
 app.get("/api/jwt/info", (_req, res) => {
   res.json({
     supportedAlgorithms: SUPPORTED_ALGORITHMS,
     default: algorithmInfo(keys.algorithm),
+    hybridDefault: algorithmInfo(keys.hybridAlgorithm),
     all: SUPPORTED_ALGORITHMS.map((a) => algorithmInfo(a)),
   });
 });
@@ -91,11 +93,12 @@ app.post("/api/jwt/refresh", requireAuth, (req, res) => {
   try {
     const audience = req.user.audience;
     const authMode = normalizeAuthMode(req.body?.authMode);
+    const algorithm = req.body?.algorithm || "ML-DSA-65";
     let token;
     let jti;
 
     if (req.pqJwt) {
-      token = refresh(req.pqJwt, keys.publicKey, keys.secretKey, {
+      token = refresh(req.pqJwt, keys, {
         expiresIn: "24h",
         issuer: process.env.JWT_ISSUER || "pq-jwttest",
         subject: req.user.userId,
@@ -107,8 +110,9 @@ app.post("/api/jwt/refresh", requireAuth, (req, res) => {
       if (req.sessionId) deleteSession(req.sessionId);
       const issued = issueTokenForUser(
         { id: req.user.userId, username: req.user.username },
-        keys.secretKey,
+        keys,
         audience,
+        { algorithm }
       );
       token = issued.token;
       jti = issued.jti;
@@ -137,17 +141,16 @@ app.post("/api/auth/register", async (req, res) => {
     const user = await registerUser(username, password);
     res.status(201).json({ user });
   } catch (err) {
-    const status = err.code === 11000 ? 400 : 400;
-    res.status(status).json({ error: err.message || "Registration failed" });
+    res.status(400).json({ error: err.message || "Registration failed" });
   }
 });
 
 app.post("/api/auth/login", async (req, res) => {
   try {
-    const { username, password, authMode: rawMode } = req.body;
+    const { username, password, authMode: rawMode, algorithm } = req.body;
     const audience = resolveAudienceFromRequest(req);
     const authMode = normalizeAuthMode(rawMode);
-    const result = await loginUser(username, password, keys.secretKey, audience);
+    const result = await loginUser(username, password, keys, audience, algorithm);
 
     if (authMode === "cookie" || authMode === "both") {
       createSession(result.jti, {
@@ -178,7 +181,7 @@ app.post("/api/auth/logout", (req, res) => {
   res.json({ ok: true });
 });
 
-app.get("/api/auth/me", authMiddleware(keys.publicKey), async (req, res) => {
+app.get("/api/auth/me", authMiddleware(keys), async (req, res) => {
   try {
     const user = await getPublicUser(req.user.userId);
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -245,6 +248,7 @@ async function main() {
   app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
     console.log(`PQ-JWT algorithm: ${keys.algorithm}`);
+    console.log(`Hybrid JWT algorithm: ${keys.hybridAlgorithm}`);
     console.log(`MongoDB: ${process.env.MONGODB_URI || "mongodb://127.0.0.1:27017"}/${process.env.MONGODB_DB || "pq_jwttest"}`);
     console.log(`JWT issuer: ${getJwtConfig().issuer}`);
     console.log(`JWT audiences: ${getJwtConfig().allowedAudiences.join(", ")}`);
